@@ -8,6 +8,9 @@ public class PercolationStats {
     private double result;
     private int times;
     public PercolationStats(int N, int T){
+        if(N <= 0 || T < 0){
+            throw new java.lang.IllegalArgumentException();
+        }
         results = new double[T];
         times = T;
         for(int i=0; i<T; i++){
