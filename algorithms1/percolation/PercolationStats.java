@@ -1,44 +1,57 @@
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
-import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class PercolationStats {
     private Percolation perc;
     private double[] results;
-    private double result;
     private int times;
-    public PercolationStats(int N, int T){
-        if(N <= 0 || T < 0){
+    private int openCount;
+    private int randomRow;
+    private int randomColumn;
+
+    public PercolationStats(int N, int T) {
+        if (N <= 0 || T < 0) {
             throw new java.lang.IllegalArgumentException();
         }
         results = new double[T];
         times = T;
-        for(int i=0; i<T; i++){
+        for (int i = 0; i < T; i++) {
             perc = new Percolation(N);
-            while(!perc.percolates()){
-                perc.open(StdRandom.uniform(1, N+1), StdRandom.uniform(1, N+1));
+            openCount = 0;
+            while (!perc.percolates()) {
+                randomRow = StdRandom.uniform(1, N+1);
+                randomColumn = StdRandom.uniform(1, N+1);
+                if (!perc.isOpen(randomRow, randomColumn)) {
+                    perc.open(randomRow, randomColumn);
+                    openCount++;
+                }
             }
-            results[i] = perc.count()/(double)(N*N);
+            results[i] = openCount/(double) (N*N);
         }
 
         System.out.printf("mean                     = %f%n", mean());
         System.out.printf("stdev                    = %f%n", stddev());
         System.out.printf("95%% confidence interval  = %f, %f%n", confidenceLo(), confidenceHi());
+        System.out.println(perc.getCount());
     }
-    public double mean(){
+
+    public double mean() {
         return StdStats.mean(results);
     }
-    public double stddev(){
+
+    public double stddev() {
         return StdStats.stddev(results);
     }
-    public double confidenceLo(){
+
+    public double confidenceLo() {
         return mean()-1.96*stddev()/java.lang.Math.sqrt(times);
     }
-    public double confidenceHi(){
+
+    public double confidenceHi() {
         return mean()+1.96*stddev()/java.lang.Math.sqrt(times);
     }
 
-    public static void main(String[] args){
-        PercolationStats percStats = new PercolationStats(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+    public static void main(String[] args) {
+        new PercolationStats(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
     }
 }
