@@ -3,73 +3,68 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class RandomizedQueue<Item> implements Iterable<Item> {
-    private Node first, last = null;
-    private int N = 0;
+    private Item[] q;
+    private int N;
+    private int first;
+    private int last;
 
     public RandomizedQueue() {
-        first = null;
+        q = (Item[]) new Object[2];
         N = 0;
-    }
-
-    private class Node {
-        Item item;
-        Node next;
-        Node prev;
+        first = 0;
+        last = 0;
     }
 
     public boolean isEmpty() {
-        return (first == null || last == null);
+        return N == 0;
     }
     public int size() {
         return N;
     }
-    public void enqueue(Item item) {
-        if(item == null) throw new java.lang.NullPointerException();
 
-        Node oldLast = last;
-        last = new Node();
-        last.item = item;
-        last.next = null;
-
-        if (isEmpty()) {
-            first = last;
-            last.prev = null;
-        } else  {
-            last.prev     = oldLast;
-            oldLast.next  = last;
+    private void resize(int capacity) {
+        assert capacity >= N;
+        Item[] temp = (Item[]) new Object[capacity];
+        for (int i = 0; i < N; i++) {
+            temp[i] = q[i+first];
         }
+        q = temp;
+        first = 0;
+        last  = N;
+    }
+
+    private void compact(int index) {
+        if (index - first > last - index) {
+            for (int i = index; i < last-1; i++) {
+                q[i] = q[i+1];
+            }
+            q[--last] = null;
+        } else {
+            for (int i = index; i > first; i--) {
+                q[i] = q[i-1];
+            }
+            q[first++] = null;
+        }
+    }
+
+    public void enqueue(Item item) {
+        if (N == q.length) resize(2*q.length);
+        q[last++] = item;
+
         N++;
     }
     public Item dequeue() {
         if (!isEmpty()) {
-            int index = StdRandom.uniform(0, N);
+            int index = StdRandom.uniform(first, last);
 
-            Node current = first;
-            for(int currenIndex = 0; currenIndex < index; currenIndex++){
-                current = current.next;
-            }
-
-            Item item = current.item;
-
-            if (index == 0) {
-                first = current.next;
-                if (first != null) first.prev = null;
-            }
-            if (index == N-1) {
-                last = current.prev;
-                if (last != null) last.next = null;
-            }
-
-            if (current.prev != null) {
-                current.prev.next = current.next;
-            }
-            if (current.next != null) {
-                current.next.prev = current.prev;
-            }
-
+            Item item = q[index];
+            q[index] = null;
             N--;
-            return item;
 
+            compact(index);
+
+            if (N > 0 && N == q.length/4) resize(q.length/2);
+            return item;
         } else {
             throw new java.util.NoSuchElementException();
         }
@@ -77,106 +72,38 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     public Item sample() {
         if (!isEmpty()) {
-            int index = StdRandom.uniform(0, N);
-            Node current = first;
-            for(int currenIndex = 0; currenIndex < index; currenIndex++){
-                current = current.next;
-            }
-            return current.item;
+            int index = StdRandom.uniform(first, last);
+            return q[index];
         } else {
             throw new java.util.NoSuchElementException();
         }
     }
 
     public Iterator<Item> iterator() {
-        return new ListIterator();
+        return new ArrayIterator();
     }
 
-    private class ListIterator implements Iterator<Item> {
-        private Node current;
-        private int newN = 0;
-        private Node newFirst;
-
-        public ListIterator(){
-            Node oldCurrent = first;
-            int index = 0;
-
-            while(oldCurrent != null) {
-                newN++;
-                current = new Node();
-                current.next = oldCurrent.next;
-                current.prev = oldCurrent.prev;
-                current.item = oldCurrent.item;
-                oldCurrent = oldCurrent.next;
-
-                if (index == 0) {
-                    newFirst = current;
-                }
-                index++;
+    private class ArrayIterator implements Iterator<Item> {
+        private int i = 0;
+        private int[] randomArr;
+        public ArrayIterator() {
+            randomArr = new int[last - first];
+            for (int tempi = first; tempi < last; tempi++) {
+                randomArr[tempi - first] = tempi;
             }
-
-            index = StdRandom.uniform(0, newN+1);
-            current = newFirst;
-            for(int currenIndex = 0; currenIndex < index; currenIndex++){
-                current = current.next;
-            }
+            StdRandom.shuffle(randomArr);
         }
+        public boolean hasNext()  { return i < N;                               }
+        public void remove()      { throw new UnsupportedOperationException();  }
 
-        public boolean hasNext() { return newN > 0; }
-        public void remove() {
-            throw new java.lang.UnsupportedOperationException();
-        }
         public Item next() {
-            if (newN > 0) {
-                int index = StdRandom.uniform(0, newN);
-
-                current = newFirst;
-
-                for(int currenIndex = 0; currenIndex < index; currenIndex++){
-                    current = current.next;
-                }
-
-                Item item = current.item;
-
-                if (index == 0) {
-                    newFirst = current.next;
-                    if (newFirst != null) newFirst.prev = null;
-                }
-
-                if (index == newN-1) {
-                    Node last = current.prev;
-                    if (last != null) last.next = null;
-                }
-
-                if (current.prev != null) {
-                    current.prev.next = current.next;
-                }
-                if (current.next != null) {
-                    current.next.prev = current.prev;
-                }
-
-                newN--;
-
-                return item;
-
-            } else {
-                throw new java.util.NoSuchElementException();
-            }
+            if (!hasNext()) throw new NoSuchElementException();
+            Item item = q[randomArr[i]];
+            i++;
+            return item;
         }
     }
 
     public static void main(String[] args) {
-        RandomizedQueue<String> q = new RandomizedQueue<String>();
-        for (int i=0; i<args.length; i++) {
-            q.enqueue(args[i]);
-        }
-        // for (int i=0; i<args.length; i++) {
-        //     System.out.println(q.dequeue());
-        // }
-        for (Iterator i = q.iterator(); i.hasNext(); ) {
-            String item = (String) i.next();
-            System.out.println(item);
-        }
-
     }
 }
