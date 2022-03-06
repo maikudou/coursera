@@ -8,7 +8,7 @@ public class WhichSort {
 
             String strLine;
 
-            String[] lines = new String[8];
+            String[] lines = new String[7];
             int line = 0;
 
             while ((strLine = br.readLine()) != null) {
@@ -24,28 +24,44 @@ public class WhichSort {
 
             String[] input = lines[0].split(" ");
             Comparable[] list = new Comparable[input.length];
-            int result = 3;
+            int result = 5;
 
             for (line = 1; line < lines.length-1; line++) {
-                result = 3;
+                result = 5;
                 for (int i = 0; i < input.length; i++) {
                     list[i]=input[i];
                 }
 
-                if(InsertionSort.sortFind(list, lines[line])){
+                if(SelectionSort.sortFind(list, lines[line])){
                     result = 1;
                 }else{
                     for (int k = 0; k < input.length; k++) {
                         list[k]=input[k];
                     }
 
-                    if(SelectionSort.sortFind(list, lines[line])){
+                    if(InsertionSort.sortFind(list, lines[line])){
                         result = 2;
+                    }else{
+                        for (int k = 0; k < input.length; k++) {
+                            list[k]=input[k];
+                        }
+
+                        if(QuickSort.sortFind(list, 0, list.length-1, lines[line])){
+                            result = 4;
+                        }else{
+                            for (int k = 0; k < input.length; k++) {
+                                list[k]=input[k];
+                            }
+
+                            if(MergeSort.sortFind(list, lines[line])){
+                                result = 3;
+                            }
+                        }
                     }
                 }
                 System.out.print(result+" ");
             }
-            System.out.printf("4 %n");
+            System.out.printf("6 %n");
 
 
         }catch(Exception e){

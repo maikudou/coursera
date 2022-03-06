@@ -1,6 +1,7 @@
 import edu.princeton.cs.algs4.StdRandom;
 
 public class QuickSort {
+    private static Boolean sortFindFound = false;
     private static int partition(Comparable[] a, int lo, int hi) {
         int i = 0, j=hi+1;
         while (true) {
@@ -25,6 +26,30 @@ public class QuickSort {
         int j = partition(a, lo, hi);
         sort(a, lo, j-1);
         sort(a, j+1, hi);
+    }
+
+    public static boolean sortFind(Comparable[] a, int lo, int hi, String like){
+        String sorted = "";
+        for (int k = 0; k < a.length; k++) {
+            sorted +=(a[k]);
+            if (k < a.length-1) {
+                sorted +=(' ');
+            }
+        }
+        if(sorted.equals(like)){
+            sortFindFound = true;
+        }
+
+        if (hi <= lo ) return false;
+        int j = partition(a, lo, hi);
+        sortFind(a, lo, j-1, like);
+        sortFind(a, j+1, hi, like);
+
+        if(sortFindFound) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private static void sort3w(Comparable[] a, int lo, int hi) {
